@@ -1,0 +1,18 @@
+# segredos
+.env
+.env.*
+!.env.example
+
+# node
+**/node_modules/
+back-end/*.log
+npm-debug.log*
+
+# python (etapa final)
+server-voz/.venv/
+server-voz/__pycache__/
+server-voz/**/*.pyc
+server-voz/*.wav
+
+# sistema
+.DS_Store

@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: back-end/Dockerfile
+    image: socrates-backend:local
+    container_name: socrates-backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "3000"
+      FRONTEND_DIR: /app/front-end
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      TTS_PROVIDER: ${TTS_PROVIDER:-mock}
+      TTS_URL: http://host.docker.internal:8880
+      TTS_SPEAKER: ${TTS_SPEAKER:-Serena}
+      TTS_LANGUAGE: ${TTS_LANGUAGE:-portuguese}
+      TTS_TIMEOUT_MS: ${TTS_TIMEOUT_MS:-45000}
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
