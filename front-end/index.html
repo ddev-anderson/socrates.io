@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0D0D0E" />
+  <script>
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var forced = params.get("theme");
+        var saved = localStorage.getItem("socrates.theme");
+        var theme = forced === "light" || forced === "dark" ? forced : saved === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = theme;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "light" ? "#FFFFFF" : "#0D0D0E");
+      } catch (error) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+  <meta name="description" content="Prática de argumentação técnica por voz de baixa latência." />
+  <title>socrates --interview · Socrates.io</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%239A80FF'/%3E%3C/svg%3E" />
+  <link rel="preload" href="./fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="./style/styles.css" />
+  <link rel="stylesheet" href="./style/mini.css" />
+</head>
+<body data-state="idle">
+  <div class="ambient" aria-hidden="true"></div>
+
+  <div class="app" id="app">
+    <header class="topbar">
+      <a class="wordmark" href="./" aria-label="Socrates.io — início">
+        <span class="wordmark-dot" aria-hidden="true"></span>
+        <span>socrates<span class="wordmark-tld">.io</span></span>
+      </a>
+
+      <div class="topbar-actions">
+        <span class="connection" id="connection" data-mode="demo" title="Backend não detectado — respostas simuladas neste navegador.">
+          <span class="connection-dot" aria-hidden="true"></span>
+          <span id="connectionLabel">conectando…</span>
+        </span>
+        <button class="icon-btn" id="miniBtn" type="button" aria-label="Abrir janela flutuante" title="Abrir janela flutuante">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <rect x="12" y="11" width="7" height="6" rx="1" />
+          </svg>
+        </button>
+        <button class="icon-btn theme-btn" id="themeBtn" type="button" aria-label="Mudar para tema claro" title="Mudar para tema claro">
+          <svg class="theme-icon theme-icon--sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="theme-icon theme-icon--moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+          </svg>
+        </button>
+        <button class="icon-btn" id="resetBtn" type="button" aria-label="Nova entrevista" title="Nova entrevista" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 4v5h5" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="hero" id="hero" aria-labelledby="heroTitle">
+        <p class="eyebrow" id="heroEyebrow">Entrevista técnica · método socrático</p>
+        <h1 class="hero-title" id="heroTitle">socrates --interview</h1>
+        <p class="hero-lede" id="heroLede">Prática de argumentação técnica por voz de baixa latência.</p>
+      </section>
+
+      <section class="transcript" id="transcript" aria-label="Transcrição da entrevista" hidden>
+        <div class="transcript-inner" id="transcriptInner"></div>
+      </section>
+    </main>
+
+    <section class="console" aria-label="Controles de voz">
+      <button class="orb" id="orb" type="button" aria-describedby="stateLabel" aria-label="Iniciar entrevista">
+        <span class="orb-halo" aria-hidden="true"></span>
+        <span class="orb-ring orb-ring--inner" aria-hidden="true"></span>
+        <span class="orb-ring orb-ring--outer" aria-hidden="true"></span>
+        <span class="orb-core" aria-hidden="true">
+          <span class="orb-tint"></span>
+          <span class="orb-gloss"></span>
+          <span class="orb-sheen"></span>
+        </span>
+      </button>
+
+      <div class="state-line" id="stateLine">
+        <span class="state-dot" aria-hidden="true"></span>
+        <span class="state-label" id="stateLabel" aria-live="polite">Inativo</span>
+      </div>
+      <p class="hint" id="hint">Clique no orbe para começar</p>
+
+      <div class="voice-picker" id="voicePicker" hidden>
+        <label class="voice-label" for="modeSelect">modo</label>
+        <span class="voice-select">
+          <select id="modeSelect" aria-label="Escolher modo da conversa"></select>
+          <svg class="voice-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+
+        <label class="voice-label" for="languageSelect">idioma</label>
+        <span class="voice-select">
+          <select id="languageSelect" aria-label="Escolher idioma da conversa"></select>
+          <svg class="voice-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+
+        <label class="voice-label" for="voiceSelect">voz</label>
+        <span class="voice-select">
+          <select id="voiceSelect" aria-label="Escolher voz da IA"></select>
+          <svg class="voice-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+
+        <button class="voice-audition" id="voiceAudition" type="button" aria-label="Ouvir a voz selecionada" title="Ouvir a voz selecionada">
+          <svg class="voice-icon voice-icon--play" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5.5v13l11-6.5z" />
+          </svg>
+          <svg class="voice-icon voice-icon--stop" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="6" width="12" height="12" rx="1.5" />
+          </svg>
+          <span class="voice-spinner" aria-hidden="true"></span>
+          <span class="voice-audition-label" id="voiceAuditionLabel">ouvir</span>
+        </button>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off" hidden>
+        <input id="composerInput" name="answer" type="text" placeholder="Digite sua resposta…" aria-label="Digite sua resposta" />
+        <button class="send-btn" type="submit" aria-label="Enviar resposta">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="m5 12 7-7 7 7" />
+          </svg>
+        </button>
+      </form>
+
+      <button class="text-toggle" id="textToggle" type="button" hidden>prefiro digitar</button>
+    </section>
+  </div>
+
+  <div class="mini-fallback" id="miniFallback" hidden></div>
+
+  <audio id="player" preload="auto"></audio>
+  <audio id="voicePreviewPlayer" preload="auto"></audio>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

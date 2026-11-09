@@ -1,0 +1,305 @@
+/* ============================================================
+   Janela flutuante — modo compacto estilo Gemini Live
+   ============================================================ */
+
+.mini-fallback {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  animation: mini-in 0.28s var(--ease) both;
+}
+
+.mini-fallback[hidden] {
+  display: none !important;
+}
+
+body.mini-body {
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Na janela separada a troca de tema é imediata: sem transição congelada
+   enquanto a janela está em segundo plano. */
+body.mini-body,
+body.mini-body .mini-card,
+body.mini-body .mini-status,
+body.mini-body .mini-dot {
+  transition: none !important;
+}
+
+body.mini-body .mini-card {
+  min-height: calc(100dvh - 20px);
+}
+
+.mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 15px 16px 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="light"] .mini-card {
+  box-shadow:
+    0 24px 60px rgba(18, 18, 24, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- cabeçalho ---------- */
+
+.mini-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mini-live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mini-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(var(--orb-rgb));
+  box-shadow: 0 0 8px rgba(var(--orb-rgb), 0.65);
+  transition: background-color 0.45s ease, box-shadow 0.45s ease;
+}
+
+.mini-status {
+  overflow: hidden;
+  color: rgb(var(--orb-rgb));
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.45s ease;
+}
+
+.mini-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.mini-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  color: var(--text-faint);
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.mini-icon:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* ---------- conteúdo ---------- */
+
+.mini-caption {
+  display: -webkit-box;
+  min-height: 2.9em;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.45;
+  text-wrap: pretty;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.mini-context {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 0;
+}
+
+.mini-detail {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-faint);
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-wrap: pretty;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.mini-detail[hidden] {
+  display: none;
+}
+
+/* ---------- rodapé ---------- */
+
+.mini-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.mini-orb.orb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  transform: scale(calc(1 + var(--level) * 0.05));
+}
+
+.mini-orb .orb-halo {
+  inset: -48%;
+  filter: blur(16px);
+}
+
+.mini-orb .orb-ring--inner {
+  inset: -4px;
+}
+
+.mini-orb .orb-ring--outer {
+  inset: -9px;
+}
+
+.mini-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mini-hint {
+  overflow: hidden;
+  color: var(--text-faint);
+  font-size: 11px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 3px 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+}
+
+.mini-form[hidden] {
+  display: none;
+}
+
+.mini-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.mini-form input::placeholder {
+  color: var(--text-faint);
+}
+
+.mini-send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  transition: background-color 0.18s ease;
+}
+
+.mini-send:hover {
+  background: var(--border);
+}
+
+.mini-key {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text-faint);
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.mini-key:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.mini-key:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* botão do topo quando a janela está aberta */
+
+#miniBtn.is-active {
+  border-color: rgba(var(--orb-rgb), 0.38);
+  color: rgb(var(--orb-rgb));
+}
+
+@keyframes mini-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 620px) {
+  .mini-fallback {
+    right: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
+  }
+
+  /* no mobile o cartão cobre o console principal; evita o orbe aparecendo atrás */
+  body.mini-fallback-open .console {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
