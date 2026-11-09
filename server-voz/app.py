@@ -267,6 +267,13 @@ def _stream_worker(
                     if cancel.is_set():
                         break
 
+                    # mlx-audio 0.3.1: quando o total de tokens gerados é
+                    # múltiplo do tamanho do chunk, o gerador cai no caminho
+                    # não-streaming e reemite o áudio inteiro. Chunks reais de
+                    # streaming têm is_streaming_chunk=True; ignora o fantasma.
+                    if not bool(getattr(result, "is_streaming_chunk", True)):
+                        continue
+
                     audio = np.asarray(result.audio, dtype=np.float32).reshape(-1)
                     sample_rate = int(result.sample_rate)
                     is_final = bool(result.is_final_chunk)
