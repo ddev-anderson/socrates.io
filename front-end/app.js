@@ -2139,6 +2139,8 @@ const SUMMARY_ERRORS = {
   storage_unavailable: "O banco de resumos está indisponível. Verifique o MongoDB.",
   deepseek_not_configured: "O backend está sem a chave da DeepSeek.",
   invalid_summary: "O modelo retornou um resumo inválido. Tente novamente.",
+  invalid_json: "O modelo retornou um JSON incompleto. Tente novamente.",
+  summary_not_found: "Resumo não encontrado para esta conversa.",
   generation_timeout: "A geração do resumo demorou demais.",
   deepseek_401: "A chave da DeepSeek é inválida.",
   deepseek_402: "O saldo da DeepSeek está esgotado.",
@@ -2175,11 +2177,10 @@ function readOrCreateOwnerId() {
   return generated;
 }
 
-function sessionHeaders() {
-  return {
-    "Content-Type": "application/json",
-    "X-Owner-Id": apiOwnerId,
-  };
+function sessionHeaders({ json = true } = {}) {
+  const headers = { "X-Owner-Id": apiOwnerId };
+  if (json) headers["Content-Type"] = "application/json";
+  return headers;
 }
 
 async function createApiSession() {
@@ -2449,7 +2450,7 @@ async function loadRailList({ silent = false } = {}) {
 
   try {
     const response = await fetch("/api/sessions?limit=50", {
-      headers: sessionHeaders(),
+      headers: sessionHeaders({ json: false }),
       cache: "no-store",
     });
 
@@ -2520,7 +2521,9 @@ function renderRailList() {
         item.title ||
           (item.status === "generating"
             ? "Gerando resumo…"
-            : "Resumo sem título"),
+            : item.status === "failed"
+              ? "Resumo com falha"
+              : "Resumo sem título"),
       ),
     );
 
@@ -2967,7 +2970,7 @@ function startSummaryPolling(sessionId) {
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/summary`, {
-        headers: sessionHeaders(),
+        headers: sessionHeaders({ json: false }),
         cache: "no-store",
       });
 
@@ -3035,14 +3038,15 @@ async function retrySummary() {
       `/api/sessions/${sessionId}/summary/retry`,
       {
         method: "POST",
-        headers: sessionHeaders(),
+        headers: sessionHeaders({ json: false }),
       },
     );
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
+      const known = data?.error ? SUMMARY_ERRORS[data.error] : "";
       renderReaderError(
-        data?.message || friendlySummaryError(data?.error),
+        known || "Não foi possível iniciar a geração do resumo novamente.",
         { retry: true },
       );
       return;
@@ -3064,7 +3068,7 @@ async function openSavedSummary(sessionId) {
 
   try {
     const response = await fetch(`/api/sessions/${sessionId}/summary`, {
-      headers: sessionHeaders(),
+      headers: sessionHeaders({ json: false }),
       cache: "no-store",
     });
 

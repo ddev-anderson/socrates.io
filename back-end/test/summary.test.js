@@ -69,6 +69,23 @@ test("extrai JSON mesmo com cercas de markdown", () => {
   assert.equal(parsed.sections[0].title, "X");
 });
 
+test("recupera JSON truncado no limite de tokens", () => {
+  const parsed = parseSummaryJson(
+    '{"title":"T","overview":"O","sections":[{"title":"X","summary":"Y","keyPoints":["a","b"',
+  );
+
+  assert.equal(parsed.title, "T");
+  assert.equal(parsed.overview, "O");
+  assert.equal(parsed.sections[0].title, "X");
+  assert.deepEqual(parsed.sections[0].keyPoints, ["a", "b"]);
+});
+
+test("corrige vírgula ausente no JSON do modelo", () => {
+  const parsed = parseSummaryJson('{"title":"T" "overview":"O"}');
+  assert.equal(parsed.title, "T");
+  assert.equal(parsed.overview, "O");
+});
+
 test("prompt do resumo inclui idioma e transcrição numerada", () => {
   const prompt = buildSummaryPrompt({
     mode: "learning",

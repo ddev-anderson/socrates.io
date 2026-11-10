@@ -1,3 +1,4 @@
+import { jsonrepair } from "jsonrepair";
 import { z } from "zod";
 
 export const SUMMARY_PROMPT_VERSION = "learning-summary-v1";
@@ -194,12 +195,26 @@ export function parseSummaryJson(text) {
 
   value = value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
   const start = value.indexOf("{");
-  const end = value.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) {
+  if (start === -1) {
     throw new Error("resposta do modelo sem JSON");
   }
 
-  return JSON.parse(value.slice(start, end + 1));
+  const candidate = value.slice(start);
+
+  try {
+    const end = candidate.lastIndexOf("}");
+    if (end === -1) throw new Error("resposta do modelo sem JSON");
+    return JSON.parse(candidate.slice(0, end + 1));
+  } catch (firstError) {
+    // O modelo pode truncar a resposta no limite de tokens ou esquecer uma
+    // vírgula. jsonrepair fecha estruturas e corrige a maior parte dos casos;
+    // se ainda falhar, devolvemos o erro original para o retry.
+    try {
+      return JSON.parse(jsonrepair(candidate));
+    } catch {
+      throw firstError;
+    }
+  }
 }
 
 export function validateSummary(raw) {

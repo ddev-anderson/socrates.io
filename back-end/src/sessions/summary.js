@@ -19,7 +19,8 @@ Regras:
 - Escreva no idioma da conversa.
 - Cada seção deve ser autossuficiente: nada de "como vimos acima" ou "conforme o tutor disse".
 - Resuma o que o aluno aprendeu, não as perguntas do tutor.
-- Use de 2 a 6 seções, uma por conceito principal. Se a conversa for curta, uma seção basta.
+- Use de 2 a 4 seções, uma por conceito principal. Se a conversa for curta, uma seção basta.
+- Seja conciso: até 3 pontos-chave por seção, exemplo/analogia em 1 ou 2 frases e no máximo 2 flashcards por seção.
 - conceptKey deve ser um slug em minúsculas, sem acentos, com hífens (ex.: clean-architecture).
 - Responda SOMENTE com um objeto JSON válido, sem markdown e sem texto fora do JSON.`;
 
@@ -89,7 +90,7 @@ async function callModel({ system, user, signal }) {
         { role: "user", content: user },
       ],
       temperature: 0.2,
-      max_tokens: 2200,
+      max_tokens: 4096,
       response_format: { type: "json_object" },
     },
     { signal },
@@ -122,7 +123,7 @@ A resposta anterior não passou na validação (${error.message}).
 Resposta anterior (trecho):
 ${first.slice(0, 8000)}
 
-Corrija o JSON e responda SOMENTE com o objeto válido.`,
+Gere um resumo mais curto (no máximo 4 seções) e responda SOMENTE com o objeto JSON válido.`,
       signal,
     });
 
@@ -136,6 +137,9 @@ function safeErrorCode(error) {
   }
   if (error?.name === "AbortError" || error?.code === "ABORT_ERR") {
     return "generation_timeout";
+  }
+  if (error?.name === "SyntaxError") {
+    return "invalid_json";
   }
   if (error?.name === "ZodError" || /resumo (inválido|sem seções)/.test(error?.message ?? "")) {
     return "invalid_summary";
