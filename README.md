@@ -27,6 +27,9 @@ DeepSeek, and a native Apple Silicon sidecar synthesizes the voice locally with
 - Light and dark themes, a floating Document Picture-in-Picture player, and a
   browser-only demo mode.
 - Local speech synthesis: the voice never leaves the machine.
+- End-of-conversation learning summaries with key points, examples, check
+  questions and flashcards, shown in a reader view and reopened from the
+  right-side **Meus resumos** rail.
 - The DeepSeek key stays on the server and is never sent to the browser.
 
 ## Architecture
@@ -42,6 +45,9 @@ Browser (Chrome / Edge)
   │                                              ├──► DeepSeek API
   │                                              │    prompt + mode + language
   │                                              │    tokens + sentence events
+  │                                              │
+  │                                              ├──► MongoDB
+  │                                              │    sessões + resumos
   │                                              │
   └── POST /api/tts/stream (SSE) ◄───────────────┤
                                                  │  HTTP, port 8880
@@ -67,8 +73,9 @@ container reaches the host sidecar through `host.docker.internal:8880`.
 - **Speech synthesis:** Qwen3-TTS 1.7B CustomVoice 8-bit via the
   `qwen3-tts-apple-silicon` MLX project and the `mlx-audio` library, served by
   FastAPI/uvicorn. The adapter lives in `server-voz/app.py`.
-- **Infrastructure:** Docker Compose for the Node server; a Python 3.12 virtual
-  environment for the MLX sidecar.
+- **Persistence:** MongoDB 7 stores learning sessions and their summaries.
+- **Infrastructure:** Docker Compose for the Node server and MongoDB; a Python
+  3.12 virtual environment for the MLX sidecar.
 
 The Qwen3-TTS checkpoint is expected at
 `models/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit` inside the external
@@ -79,6 +86,8 @@ The Qwen3-TTS checkpoint is expected at
 - macOS on Apple Silicon (M-series). MLX and the real TTS need Metal.
 - Node.js 24+ and npm.
 - Docker Desktop (recommended for the Node server) **or** a native Node setup.
+- MongoDB 7+ for the learning summaries. Docker Compose starts it
+  automatically; a native setup expects `mongodb://127.0.0.1:27017`.
 - Python 3.12 with the `qwen3-tts-apple-silicon` project and a virtual
   environment containing `mlx`, `mlx-audio`, `soundfile`, `fastapi`, `uvicorn`
   and `numpy`.
@@ -147,7 +156,9 @@ docker compose up -d --build
 ```
 
 The app is served at <http://127.0.0.1:3000>. The container reads `.env` through
-`env_file`; the `.env` file is not copied into the image.
+`env_file`; the `.env` file is not copied into the image. Compose also starts a
+`mongo:7` service backed by the `mongo-data` volume; the app connects to it at
+`mongodb://mongo:27017`.
 
 **Native Node:**
 
@@ -159,7 +170,8 @@ npm run dev
 
 The native server also serves the front-end at
 <http://127.0.0.1:3000> and loads the repository's `.env` from the parent
-directory.
+directory. It expects MongoDB at `MONGODB_URI`
+(default `mongodb://127.0.0.1:27017`).
 
 ### 4. Use the app
 
@@ -168,6 +180,10 @@ directory.
 3. Choose a language and a voice, and use **ouvir** to preview the voice.
 4. Click the orb and allow microphone access. The first turn starts the
    conversation. You can also type with the text fallback.
+5. When you finish, click **Encerrar conversa** and confirm. The learning
+   summary opens in the reader; the book icon in the topbar toggles the
+   **Meus resumos** rail, where older summaries can be reopened, searched and
+   exported.
 
 The mode and the voice/language choices are stored in `localStorage`. The mode
 is locked while a session is active; end the session before changing it.
@@ -197,6 +213,11 @@ the two modes do not share history.
 7. When the response and audio finish, the microphone is resumed automatically
    for the next turn. Clicking the orb interrupts; ending a session stops all
    playback.
+8. When the user clicks **Encerrar conversa** and confirms, the front-end sends
+   the transcript to `/api/sessions/:id/end`. The backend stores it in MongoDB
+   and generates a concept-by-concept study summary (key points, examples,
+   check questions and flashcards) that the end-of-session screen shows and
+   **Meus resumos** reopens later.
 
 ### Audio modes
 
@@ -275,6 +296,7 @@ microphone while it plays.
 │   │   ├── server.js           # process entry point
 │   │   ├── app.js              # Fastify app and route registration
 │   │   ├── config.js           # environment configuration
+│   │   ├── db.js               # lazy MongoDB connection and indexes
 │   │   ├── languages.js        # language catalog (10 languages)
 │   │   ├── chat/
 │   │   │   ├── deepseek.js     # DeepSeek streaming provider
@@ -283,8 +305,12 @@ microphone while it plays.
 │   │   │   └── splitter.js     # sentence segmentation and sanitization
 │   │   ├── routes/
 │   │   │   ├── chat.js         # POST /api/chat (SSE)
+│   │   │   ├── sessions.js     # sessions and learning summaries
 │   │   │   ├── tts.js          # /api/voices, /api/tts, /api/tts/stream
 │   │   │   └── health.js       # GET /api/health
+│   │   ├── sessions/
+│   │   │   ├── summary.js      # summary prompt, DeepSeek call and storage
+│   │   │   └── summary-schema.js # normalization and validation
 │   │   └── tts/
 │   │       ├── index.js        # provider selection
 │   │       ├── qwen.js         # proxy to the MLX sidecar
@@ -334,6 +360,8 @@ The Node server reads `.env` (copy `.env.example`):
 | `TTS_SPEAKER` | Initial voice | `Serena` |
 | `TTS_LANGUAGE` | Initial TTS language | `portuguese` |
 | `TTS_TIMEOUT_MS` | TTS request timeout | `45000` |
+| `MONGODB_URI` | MongoDB connection string | `mongodb://127.0.0.1:27017` |
+| `MONGODB_DB` | MongoDB database name | `socrates` |
 
 The TTS sidecar reads:
 
@@ -359,6 +387,14 @@ sends the key to the browser.
 - `POST /api/tts` — `{ text, language?, speaker? }` → `audio/wav`.
 - `POST /api/tts/stream` — the same body → SSE with base64 WAV chunks and a
   final `done` event.
+- `POST /api/sessions` — `{ mode?, language?, voice? }` + `X-Owner-Id` →
+  `{ sessionId }`.
+- `POST /api/sessions/:id/end` — `{ messages }` → 202 while the learning
+  summary is generated.
+- `GET /api/sessions/:id/summary` — summary (200), generating (202) or failed
+  (502).
+- `POST /api/sessions/:id/summary/retry` — regenerates a failed summary.
+- `GET /api/sessions` — recent summaries for `X-Owner-Id`.
 - `GET /*` — the static front-end.
 
 ## Tests
@@ -368,11 +404,13 @@ cd back-end
 npm test
 ```
 
-The Node suite has **29 tests**, including prompt/mode behavior, language
+The Node suite has **35 tests**, including prompt/mode behavior, language
 selection, SSE chat, sentence splitting, voice/language validation, the mock TTS
-and the streaming TTS endpoint. The browser flows (mode switch, learning
-conversation, interview help, text/audio synchronization and mobile layout)
-are validated with an end-to-end Chrome run.
+and the streaming TTS endpoint. The learning summary has unit tests for schema
+normalization, concept slugging, duplicate section merging, the section limit,
+JSON extraction from Markdown fences and the summary prompt. The browser flows
+(mode switch, learning conversation, interview help, text/audio synchronization
+and mobile layout) are validated with an end-to-end Chrome run.
 
 ## Latency and design notes
 
@@ -418,3 +456,6 @@ are validated with an end-to-end Chrome run.
 - **Docker cannot reach the TTS sidecar** — keep the sidecar bound to
   `0.0.0.0`, use `host.docker.internal` on macOS, and use the compose
   `extra_hosts` mapping on Linux.
+- **“Meus resumos” or the end-of-session summary fails** — check that MongoDB
+  is running (`docker compose up -d mongo`) and that `MONGODB_URI` points to
+  it. Chat and TTS keep working while the summary store is unavailable.
