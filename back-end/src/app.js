@@ -2,8 +2,10 @@ import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import { config } from "./config.js";
 import { streamChat as defaultChatStream } from "./chat/deepseek.js";
+import { closeDb } from "./db.js";
 import chatRoutes from "./routes/chat.js";
 import healthRoutes from "./routes/health.js";
+import sessionsRoutes from "./routes/sessions.js";
 import ttsRoutes from "./routes/tts.js";
 
 export async function buildApp({ logger, chatStream = defaultChatStream } = {}) {
@@ -15,6 +17,11 @@ export async function buildApp({ logger, chatStream = defaultChatStream } = {}) 
   await app.register(chatRoutes, { streamChat: chatStream });
   await app.register(ttsRoutes);
   await app.register(healthRoutes);
+  await app.register(sessionsRoutes);
+
+  app.addHook("onClose", async () => {
+    await closeDb();
+  });
 
   await app.register(fastifyStatic, {
     root: config.frontendDir,
