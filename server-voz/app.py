@@ -262,21 +262,38 @@ def _stream_worker(
                 streaming_interval=STREAMING_INTERVAL,
             )
 
+            emitted_samples = 0
+
             try:
                 for result in results:
                     if cancel.is_set():
+                        print("[mlx-tts] geração cancelada pelo cliente", flush=True)
                         break
-
-                    # mlx-audio 0.3.1: quando o total de tokens gerados é
-                    # múltiplo do tamanho do chunk, o gerador cai no caminho
-                    # não-streaming e reemite o áudio inteiro. Chunks reais de
-                    # streaming têm is_streaming_chunk=True; ignora o fantasma.
-                    if not bool(getattr(result, "is_streaming_chunk", True)):
-                        continue
 
                     audio = np.asarray(result.audio, dtype=np.float32).reshape(-1)
                     sample_rate = int(result.sample_rate)
                     is_final = bool(result.is_final_chunk)
+                    is_streaming = bool(getattr(result, "is_streaming_chunk", True))
+
+                    # mlx-audio 0.3.1: quando o total de tokens gerados é
+                    # múltiplo do tamanho do chunk, o gerador cai no caminho
+                    # não-streaming e reemite o áudio inteiro no final. Só
+                    # descarta se o bloco for a repetição exata do que já foi
+                    # enviado; qualquer outro áudio é preservado.
+                    if (
+                        not is_streaming
+                        and not is_final
+                        and emitted_samples > 0
+                        and audio.size > 0
+                    ):
+                        tolerance = max(240, int(emitted_samples * 0.02))
+                        if abs(int(audio.size) - emitted_samples) <= tolerance:
+                            print(
+                                "[mlx-tts] bloco duplicado descartado "
+                                f"({audio.size / sample_rate:.2f}s)",
+                                flush=True,
+                            )
+                            continue
 
                     if audio.size > 0:
                         wav = _wav_bytes(audio, sample_rate)
@@ -298,6 +315,7 @@ def _stream_worker(
 
                     events.put(payload)
                     chunk_index += 1
+                    emitted_samples += int(audio.size)
 
                     if is_final:
                         break
