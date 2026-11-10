@@ -19,10 +19,15 @@ services:
       TTS_SPEAKER: ${TTS_SPEAKER:-Serena}
       TTS_LANGUAGE: ${TTS_LANGUAGE:-portuguese}
       TTS_TIMEOUT_MS: ${TTS_TIMEOUT_MS:-45000}
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: ${MONGODB_DB:-socrates}
     env_file:
       - .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      mongo:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -36,3 +41,28 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: socrates-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--eval",
+          "db.adminCommand('ping').ok",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
