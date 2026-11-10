@@ -47,6 +47,8 @@ export const config = {
   ttsTimeoutMs,
   deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
   deepseekModel: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+  mongoUri: process.env.MONGODB_URI ?? "mongodb://127.0.0.1:27017",
+  mongoDb: process.env.MONGODB_DB ?? "socrates",
   hasDeepSeekKey,
   // B2: o chat live exige a chave. Sem ela o front-end fica em modo demo.
   ready: hasDeepSeekKey,
