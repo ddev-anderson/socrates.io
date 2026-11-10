@@ -23,6 +23,10 @@ function getClient() {
   return client;
 }
 
+export function getDeepSeekClient() {
+  return getClient();
+}
+
 export async function* streamChat({ messages, kickoff, language, mode, signal }) {
   const openai = getClient();
   const chatMessages = buildChatMessages({ messages, kickoff, language, mode });
