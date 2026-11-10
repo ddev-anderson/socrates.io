@@ -362,6 +362,7 @@ The Node server reads `.env` (copy `.env.example`):
 | `TTS_TIMEOUT_MS` | TTS request timeout | `45000` |
 | `MONGODB_URI` | MongoDB connection string | `mongodb://127.0.0.1:27017` |
 | `MONGODB_DB` | MongoDB database name | `socrates` |
+| `OWNER_ID` | Local owner shared by all browsers | `socrates-local` |
 
 The TTS sidecar reads:
 
@@ -387,14 +388,13 @@ sends the key to the browser.
 - `POST /api/tts` — `{ text, language?, speaker? }` → `audio/wav`.
 - `POST /api/tts/stream` — the same body → SSE with base64 WAV chunks and a
   final `done` event.
-- `POST /api/sessions` — `{ mode?, language?, voice? }` + `X-Owner-Id` →
-  `{ sessionId }`.
+- `POST /api/sessions` — `{ mode?, language?, voice? }` → `{ sessionId }`.
 - `POST /api/sessions/:id/end` — `{ messages }` → 202 while the learning
   summary is generated.
 - `GET /api/sessions/:id/summary` — summary (200), generating (202) or failed
   (502).
 - `POST /api/sessions/:id/summary/retry` — regenerates a failed summary.
-- `GET /api/sessions` — recent summaries for `X-Owner-Id`.
+- `GET /api/sessions` — recent summaries for the local owner.
 - `GET /*` — the static front-end.
 
 ## Tests

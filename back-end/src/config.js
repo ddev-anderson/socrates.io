@@ -49,6 +49,9 @@ export const config = {
   deepseekModel: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
   mongoUri: process.env.MONGODB_URI ?? "mongodb://127.0.0.1:27017",
   mongoDb: process.env.MONGODB_DB ?? "socrates",
+  // Perfil local único: o app não tem autenticação e todos os navegadores da
+  // mesma instância compartilham as mesmas sessões e resumos.
+  ownerId: (process.env.OWNER_ID ?? "socrates-local").trim() || "socrates-local",
   hasDeepSeekKey,
   // B2: o chat live exige a chave. Sem ela o front-end fica em modo demo.
   ready: hasDeepSeekKey,

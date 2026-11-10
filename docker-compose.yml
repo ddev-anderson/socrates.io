@@ -21,6 +21,7 @@ services:
       TTS_TIMEOUT_MS: ${TTS_TIMEOUT_MS:-45000}
       MONGODB_URI: mongodb://mongo:27017
       MONGODB_DB: ${MONGODB_DB:-socrates}
+      OWNER_ID: ${OWNER_ID:-socrates-local}
     env_file:
       - .env
     extra_hosts:

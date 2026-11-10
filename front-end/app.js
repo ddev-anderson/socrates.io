@@ -195,11 +195,9 @@ let queueGen = 0;
 let pendingSpeechStreams = 0;
 let speechStreamChain = Promise.resolve();
 
-const OWNER_STORAGE_KEY = "socrates.ownerId";
 const SUMMARY_POLL_MS = 1200;
 const SUMMARY_POLL_MAX_MS = 180_000;
 
-let apiOwnerId = readOrCreateOwnerId();
 let apiSessionId = null;
 let apiSessionPromise = null;
 let summaryPollTimer = 0;
@@ -2149,36 +2147,8 @@ const SUMMARY_ERRORS = {
   empty_session: "A conversa é curta demais para gerar um resumo.",
 };
 
-function readOrCreateOwnerId() {
-  const fallback = `local-${Date.now().toString(36)}-${Math.random()
-    .toString(36)
-    .slice(2, 10)}`;
-
-  try {
-    const stored = localStorage.getItem(OWNER_STORAGE_KEY);
-    if (typeof stored === "string" && /^[a-zA-Z0-9_-]{8,64}$/.test(stored)) {
-      return stored;
-    }
-  } catch {
-    /* armazenamento indisponível */
-  }
-
-  const generated =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : fallback;
-
-  try {
-    localStorage.setItem(OWNER_STORAGE_KEY, generated);
-  } catch {
-    /* armazenamento indisponível */
-  }
-
-  return generated;
-}
-
 function sessionHeaders({ json = true } = {}) {
-  const headers = { "X-Owner-Id": apiOwnerId };
+  const headers = {};
   if (json) headers["Content-Type"] = "application/json";
   return headers;
 }

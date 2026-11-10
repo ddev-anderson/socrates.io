@@ -13,14 +13,6 @@ const MAX_MESSAGES = 200;
 const MAX_MESSAGE_CHARS = 8000;
 const MAX_TRANSCRIPT_CHARS = 200_000;
 const STALE_GENERATION_MS = 10 * 60 * 1000;
-const OWNER_RE = /^[a-zA-Z0-9_-]{8,64}$/;
-
-function readOwner(request) {
-  const value = request.headers["x-owner-id"];
-  if (typeof value !== "string") return null;
-  const owner = value.trim();
-  return OWNER_RE.test(owner) ? owner : null;
-}
 
 function parseSessionId(value) {
   if (typeof value !== "string" || !ObjectId.isValid(value)) return null;
@@ -121,8 +113,7 @@ function publicSummary(doc) {
 
 export default async function sessionsRoutes(app) {
   app.post("/api/sessions", async (request, reply) => {
-    const ownerId = readOwner(request);
-    if (!ownerId) return reply.code(400).send({ error: "invalid_owner" });
+    const ownerId = config.ownerId;
 
     const db = await database(request, reply);
     if (!db) return;
@@ -152,8 +143,7 @@ export default async function sessionsRoutes(app) {
   });
 
   app.post("/api/sessions/:id/end", async (request, reply) => {
-    const ownerId = readOwner(request);
-    if (!ownerId) return reply.code(400).send({ error: "invalid_owner" });
+    const ownerId = config.ownerId;
 
     const sessionId = parseSessionId(request.params.id);
     if (!sessionId) return reply.code(400).send({ error: "invalid_session" });
@@ -240,8 +230,7 @@ export default async function sessionsRoutes(app) {
   });
 
   app.get("/api/sessions/:id/summary", async (request, reply) => {
-    const ownerId = readOwner(request);
-    if (!ownerId) return reply.code(400).send({ error: "invalid_owner" });
+    const ownerId = config.ownerId;
 
     const sessionId = parseSessionId(request.params.id);
     if (!sessionId) return reply.code(400).send({ error: "invalid_session" });
@@ -291,8 +280,7 @@ export default async function sessionsRoutes(app) {
   });
 
   app.post("/api/sessions/:id/summary/retry", async (request, reply) => {
-    const ownerId = readOwner(request);
-    if (!ownerId) return reply.code(400).send({ error: "invalid_owner" });
+    const ownerId = config.ownerId;
 
     const sessionId = parseSessionId(request.params.id);
     if (!sessionId) return reply.code(400).send({ error: "invalid_session" });
@@ -348,8 +336,7 @@ export default async function sessionsRoutes(app) {
   });
 
   app.get("/api/sessions", async (request, reply) => {
-    const ownerId = readOwner(request);
-    if (!ownerId) return reply.code(400).send({ error: "invalid_owner" });
+    const ownerId = config.ownerId;
 
     const db = await database(request, reply);
     if (!db) return;
