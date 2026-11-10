@@ -47,6 +47,12 @@
             <rect x="12" y="11" width="7" height="6" rx="1" />
           </svg>
         </button>
+        <button class="icon-btn" id="historyBtn" type="button" aria-label="Meus resumos" title="Meus resumos" aria-controls="summariesRail" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v20H7.5A2.5 2.5 0 0 1 5 19.5z" />
+            <path d="M9 7h7M9 11h7M9 15h4" />
+          </svg>
+        </button>
         <button class="icon-btn theme-btn" id="themeBtn" type="button" aria-label="Mudar para tema claro" title="Mudar para tema claro">
           <svg class="theme-icon theme-icon--sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="4" />
@@ -77,6 +83,21 @@
       </section>
     </main>
 
+    <section class="reader" id="readerView" hidden aria-labelledby="readerTitle">
+      <header class="reader-head">
+        <div class="reader-head-top">
+          <button class="reader-back" id="readerBack" type="button">
+            ← Voltar à conversa
+          </button>
+          <span class="reader-kicker" id="readerKicker">Resumo da conversa</span>
+        </div>
+        <h2 class="reader-title" id="readerTitle">Resumo</h2>
+        <div class="reader-meta" id="readerMeta"></div>
+        <div class="reader-actions" id="readerActions"></div>
+      </header>
+      <div class="reader-body" id="readerBody"></div>
+    </section>
+
     <section class="console" aria-label="Controles de voz">
       <button class="orb" id="orb" type="button" aria-describedby="stateLabel" aria-label="Iniciar entrevista">
         <span class="orb-halo" aria-hidden="true"></span>
@@ -94,6 +115,10 @@
         <span class="state-label" id="stateLabel" aria-live="polite">Inativo</span>
       </div>
       <p class="hint" id="hint">Clique no orbe para começar</p>
+
+      <button class="end-session" id="endSessionBtn" type="button" hidden>
+        Encerrar conversa
+      </button>
 
       <div class="voice-picker" id="voicePicker" hidden>
         <label class="voice-label" for="modeSelect">modo</label>
@@ -146,7 +171,67 @@
     </section>
   </div>
 
+  <div class="rail-backdrop" id="railBackdrop" hidden></div>
+  <aside class="rail" id="summariesRail" hidden aria-label="Meus resumos">
+    <header class="rail-head">
+      <div>
+        <p class="rail-kicker">Sua biblioteca</p>
+        <h2 class="rail-title" id="railTitle">Meus resumos</h2>
+      </div>
+      <button
+        class="rail-close"
+        id="railClose"
+        type="button"
+        aria-label="Fechar meus resumos"
+        title="Fechar"
+      >
+        ×
+      </button>
+    </header>
+    <div class="rail-search">
+      <input
+        id="summarySearch"
+        type="search"
+        placeholder="Buscar por tema ou conceito"
+        autocomplete="off"
+        aria-label="Buscar resumos"
+      />
+    </div>
+    <button class="rail-new" id="railNewConversation" type="button">
+      + Nova conversa
+    </button>
+    <div class="rail-list" id="summaryList"></div>
+  </aside>
+
   <div class="mini-fallback" id="miniFallback" hidden></div>
+
+  <div class="summary-overlay" id="summaryOverlay" hidden>
+    <div class="summary-backdrop" data-summary-close="1"></div>
+    <section
+      class="summary-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="summaryTitle"
+    >
+      <header class="summary-head">
+        <div>
+          <p class="summary-kicker" id="summaryKicker">Fim da conversa</p>
+          <h2 class="summary-title" id="summaryTitle">Resumo</h2>
+        </div>
+        <button
+          class="summary-close"
+          id="summaryCloseBtn"
+          type="button"
+          aria-label="Fechar resumo"
+          title="Fechar"
+        >
+          ×
+        </button>
+      </header>
+      <div class="summary-body" id="summaryBody"></div>
+      <footer class="summary-foot" id="summaryFoot"></footer>
+    </section>
+  </div>
 
   <audio id="player" preload="auto"></audio>
   <audio id="voicePreviewPlayer" preload="auto"></audio>
