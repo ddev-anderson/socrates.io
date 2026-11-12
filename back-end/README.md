@@ -28,6 +28,26 @@ The dev server loads `../.env` and serves the front-end at
 <http://127.0.0.1:3000>. It expects MongoDB at `mongodb://127.0.0.1:27017`
 (configurable through `MONGODB_URI`).
 
+## Start the TTS sidecar
+
+The speech sidecar runs natively because MLX/Metal is not available inside
+Docker. Put the external checkout path in `../.env`:
+
+```bash
+MLX_PROJECT_DIR=/path/to/qwen3-tts-apple-silicon
+```
+
+Then, from `back-end`:
+
+```bash
+npm run tts
+```
+
+The script starts the external venv's `uvicorn` with `server-voz/app.py` on
+`0.0.0.0:8880`. Override the bind/port with `MLX_HOST` and `MLX_PORT`. Wait for
+`GET http://127.0.0.1:8880/health` to report `"ready": true`; the Docker app
+reaches the sidecar through `host.docker.internal:8880`. Press Ctrl+C to stop.
+
 ## Run with Docker
 
 ```bash

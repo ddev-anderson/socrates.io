@@ -136,6 +136,10 @@ cd server-voz
 "$MLX_PROJECT_DIR/.venv/bin/uvicorn" app:app --host 0.0.0.0 --port 8880
 ```
 
+Alternatively, set `MLX_PROJECT_DIR` in the repository `.env` and start the
+sidecar from the backend with `cd back-end && npm run tts`. The script uses the
+external venv and listens on `0.0.0.0:8880` by default (`MLX_PORT` overrides).
+
 The sidecar loads the model once and exposes:
 
 - `GET /health`

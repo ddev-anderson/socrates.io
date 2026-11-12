@@ -68,6 +68,9 @@ export MLX_PROJECT_DIR="..."
 "$MLX_PROJECT_DIR/.venv/bin/uvicorn" app:app --host 0.0.0.0 --port 8880
 ```
 
+Alternatively, put `MLX_PROJECT_DIR` in the repository `.env` and run
+`npm run tts` from `back-end`; the script starts the same uvicorn command.
+
 Binding to `0.0.0.0` lets the Node container reach the sidecar through
 `host.docker.internal:8880`. Wait for the model to load and check:
 

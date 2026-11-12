@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=../.env src/server.js",
     "start": "node --env-file-if-exists=../.env src/server.js",
+    "tts": "node --env-file-if-exists=../.env scripts/start-sidecar.js",
     "test": "node --test"
   },
   "dependencies": {
